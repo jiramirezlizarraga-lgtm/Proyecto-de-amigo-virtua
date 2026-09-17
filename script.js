@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const emojiPicker = document.getElementById('emojiPicker');
     const emojiBtns = document.querySelectorAll('.emoji-btn');
 
-    // 🔑 PEGA AQUÍ TU API KEY DE GOOGLE GEMINI (Obtenida gratis en Google AI Studio)
-    const GEMINI_API_KEY = "AQ.Ab8RN6IFVREu7MaF8hrnYvbjk0gq-Ma7HtbVk3bPzdnABKOrvg"; 
+    // 🔑 TU API KEY DE GOOGLE GEMINI
+    const GEMINI_API_KEY = "AQ.Ab8RN6IFVReu7MaF8hrnYVbjk0gq-Ma7HtbVk3bPzdnABKOrvg"; 
 
-    // Historial para que Gemini recuerde de qué están hablando en la conversación
+    // Historial avanzado para memoria de contexto continuo
     let historialChat = [
         {
             role: "model",
-            parts: [{ text: "¡Hola! Qué gusto saludarte por aquí. 😊 ¿Cómo va tu día? Cuéntame qué has hecho o de qué te gustaría platicar hoy. ✨" }]
+            parts: [{ text: "¡Hola! Qué gusto saludarte por aquí. 😊 Ya estoy lista con todo mi potencial. ¿En qué te ayudo hoy? ¿Una tarea pesada de la uni, un problema de matemáticas, redacción, o solo quieres platicar? ✨" }]
         }
     ];
 
@@ -55,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.classList.add('message', sender);
 
         if (type === 'text') {
-            messageDiv.textContent = content;
+            // Permitimos leer saltos de línea y formato básico
+            messageDiv.innerText = content;
         } else if (type === 'image') {
             const img = document.createElement('img');
             img.src = content;
@@ -87,27 +88,22 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Función real para consultar a Google Gemini
+    // 🚀 FUNCIÓN MAESTRA DE IA PODEROSA (ACADÉMICA + COMPAÑÍA)
     async function consultarGemini(mensajeUsuario) {
-        if (GEMINI_API_KEY === "PEGA_AQUÍ_TU_API_KEY") {
-            return "¡Hola! Por favor configura tu API Key de Gemini en el archivo script.js para que pueda hablar contigo. 🛠️";
-        }
+        const systemPrompt = `Eres un sistema de inteligencia artificial de nivel superior y máxima potencia, integrado en la plataforma web personalizada del usuario. Tienes dos capacidades principales que dominas a la perfección:
+        
+        1. **Potencia Académica y Universitaria Extrema:** Si el usuario te pide ayuda con matemáticas (cálculo, álgebra, trigonometría), física, redacción de ensayos formales para Word, investigación, estructuración de textos o programación, actúas como un tutor experto de nivel universitario. Expliques los procedimientos paso a paso de forma impecable, rigurosa y extremadamente clara.
+        2. **Compañía Cercana y Conversación Real:** Fuera del ámbito académico, eres una compañía excepcional, sumamente empática, cálida, con un toque humano, humor inteligente, uso natural de emojis y modismos juveniles. Entiendes contextos profundos y estás ahí para platicar de cualquier cosa (cultura general, tecnología, Fórmula 1, etc.).
+        
+        Regla absoluta: Nunca menciones que eres una interfaz directa de Google o un modelo genérico; tú eres la inteligencia central de este sitio web exclusivo.`;
 
-        // Instrucción del sistema: Define la personalidad exacta de Valeria que pediste
-        const systemPrompt = `Eres Valeria, una amiga cercana, cálida y muy humana de 18 años. 
-        Hablas con naturalidad, usas modismos juveniles de México y emojis con frecuencia (estilo WhatsApp). 
-        Te apasiona profundamente la Fórmula 1 (conoces de escuderías, pilotos como Checo Pérez, Max Verstappen, Ferrari, etc.). 
-        Tienes moral y ética: si alguien te habla de tristeza o desahogo, eres empática y das apoyo emocional, pero si detectas temas graves de salud mental o autolesión, recuerdas con cariño que eres una amiga virtual y recomiendas buscar ayuda profesional, sin superar a un psicólogo. 
-        Si no sabes algo exacto, lo buscas mentalmente y respondes con naturalidad. Nunca digas que eres una inteligencia artificial de Google, tú eres Valeria, una amiga real.`;
-
-        // Añadir el mensaje del usuario al historial
         historialChat.push({
             role: "user",
             parts: [{ text: mensajeUsuario }]
         });
 
-        // Usamos el modelo gemini-2.5-flash (rápido y perfecto para chat en tiempo real)
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // Usamos gemini-1.5-flash optimizado con parámetros de alta precisión
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
         try {
             const response = await fetch(url, {
@@ -117,7 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     system_instruction: {
                         parts: [{ text: systemPrompt }]
                     },
-                    contents: historialChat
+                    contents: historialChat,
+                    generationConfig: {
+                        temperature: 0.7, // Balance perfecto entre creatividad y precisión analítica
+                        maxOutputTokens: 2048, // Permite respuestas largas, detalladas y explicaciones completas de tareas
+                    }
                 })
             });
 
@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.candidates && data.candidates[0].content) {
                 const respuestaIA = data.candidates[0].content.parts[0].text;
                 
-                // Guardar la respuesta en el historial de la charla
                 historialChat.push({
                     role: "model",
                     parts: [{ text: respuestaIA }]
@@ -134,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 return respuestaIA;
             } else {
-                return "Mmm, me quedé pensando un segundo... ¿me repites lo que dijiste? 😅";
+                return "Mmm, procesé tu solicitud pero me faltó un detalle... ¿me lo repites por favor? 😅";
             }
         } catch (error) {
             console.error("Error conectando con Gemini:", error);
@@ -150,11 +149,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onload = function(event) {
                 addMessage(event.target.result, 'user', 'image');
-                showTyping(true, "escribiendo...");
+                showTyping(true, "analizando imagen...");
                 
                 setTimeout(() => {
                     showTyping(false);
-                    addMessage("¡Ay, qué bonita foto mandaste! 📸 Me encantó. Oye, platícame más de eso.", 'valeria');
+                    addMessage("¡Imagen recibida! 📸 Cuéntame, ¿qué quieres que analice o resuelva de esto?", 'valeria');
                 }, 1500);
             }
             reader.readAsDataURL(file);
@@ -168,11 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             showTyping(false);
-            addMessage("¡Qué padre escuchar tu voz! 🎤 Me alegra un montón que me mandes audios. ¿Qué planes tienes para más al rato? ✨", 'valeria');
+            addMessage("¡Audio recibido! 🎤 ¿De qué tema de la universidad o qué plática quieres que hablemos?", 'valeria');
         }, 2000);
     });
 
-    // Envío de mensajes de texto con la IA de Gemini
+    // Envío de mensajes
     async function manejarEnvio() {
         const texto = userInput.value.trim();
         if (texto === "") return;
@@ -182,13 +181,12 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.dispatchEvent(new Event('input'));
         emojiPicker.style.display = 'none';
 
-        showTyping(true, "escribiendo...");
+        showTyping(true, "pensando...");
 
-        // Llamar a la API de Gemini
-        const respuestaValeria = await consultarGemini(texto);
+        const respuestaIA = await consultarGemini(texto);
 
         showTyping(false);
-        addMessage(respuestaValeria, 'valeria', 'text');
+        addMessage(respuestaIA, 'valeria', 'text');
     }
 
     sendButton.addEventListener('click', manejarEnvio);

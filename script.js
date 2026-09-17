@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const emojiBtns = document.querySelectorAll('.emoji-btn');
 
     // 🔑 PEGA AQUÍ TU API KEY DE GOOGLE GEMINI (Obtenida gratis en Google AI Studio)
-    const GEMINI_API_KEY = "PEGA_AQUÍ_TU_API_KEY"; 
+    const GEMINI_API_KEY = "AQ.Ab8RN6IFVREu7MaF8hrnYvbjk0gq-Ma7HtbVk3bPzdnABKOrvg"; 
 
     // Historial para que Gemini recuerde de qué están hablando en la conversación
     let historialChat = [

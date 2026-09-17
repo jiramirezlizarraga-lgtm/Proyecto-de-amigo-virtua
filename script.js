@@ -11,7 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const emojiPicker = document.getElementById('emojiPicker');
     const emojiBtns = document.querySelectorAll('.emoji-btn');
 
-    let memoriaConversacion = { ultimoTema: null, nombreUsuario: null };
+    // 🔑 PEGA AQUÍ TU API KEY DE GOOGLE GEMINI (Obtenida gratis en Google AI Studio)
+    const GEMINI_API_KEY = "PEGA_AQUÍ_TU_API_KEY"; 
+
+    // Historial para que Gemini recuerde de qué están hablando en la conversación
+    let historialChat = [
+        {
+            role: "model",
+            parts: [{ text: "¡Hola! Qué gusto saludarte por aquí. 😊 ¿Cómo va tu día? Cuéntame qué has hecho o de qué te gustaría platicar hoy. ✨" }]
+        }
+    ];
 
     userInput.addEventListener('input', () => {
         if (userInput.value.trim().length > 0) {
@@ -78,68 +87,93 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Funcionalidad para abrir la Galería o la Cámara según el dispositivo
+    // Función real para consultar a Google Gemini
+    async function consultarGemini(mensajeUsuario) {
+        if (GEMINI_API_KEY === "PEGA_AQUÍ_TU_API_KEY") {
+            return "¡Hola! Por favor configura tu API Key de Gemini en el archivo script.js para que pueda hablar contigo. 🛠️";
+        }
+
+        // Instrucción del sistema: Define la personalidad exacta de Valeria que pediste
+        const systemPrompt = `Eres Valeria, una amiga cercana, cálida y muy humana de 18 años. 
+        Hablas con naturalidad, usas modismos juveniles de México y emojis con frecuencia (estilo WhatsApp). 
+        Te apasiona profundamente la Fórmula 1 (conoces de escuderías, pilotos como Checo Pérez, Max Verstappen, Ferrari, etc.). 
+        Tienes moral y ética: si alguien te habla de tristeza o desahogo, eres empática y das apoyo emocional, pero si detectas temas graves de salud mental o autolesión, recuerdas con cariño que eres una amiga virtual y recomiendas buscar ayuda profesional, sin superar a un psicólogo. 
+        Si no sabes algo exacto, lo buscas mentalmente y respondes con naturalidad. Nunca digas que eres una inteligencia artificial de Google, tú eres Valeria, una amiga real.`;
+
+        // Añadir el mensaje del usuario al historial
+        historialChat.push({
+            role: "user",
+            parts: [{ text: mensajeUsuario }]
+        });
+
+        // Usamos el modelo gemini-2.5-flash (rápido y perfecto para chat en tiempo real)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    system_instruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                    contents: historialChat
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0].content) {
+                const respuestaIA = data.candidates[0].content.parts[0].text;
+                
+                // Guardar la respuesta en el historial de la charla
+                historialChat.push({
+                    role: "model",
+                    parts: [{ text: respuestaIA }]
+                });
+
+                return respuestaIA;
+            } else {
+                return "Mmm, me quedé pensando un segundo... ¿me repites lo que dijiste? 😅";
+            }
+        } catch (error) {
+            console.error("Error conectando con Gemini:", error);
+            return "Ay, tuve un pequeño problema de conexión con el internet... Inténtame escribir de nuevo. 🥺";
+        }
+    }
+
+    // Manejo de fotos
     attachBtn.addEventListener('click', () => imageInput.click());
-    
     imageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(event) {
                 addMessage(event.target.result, 'user', 'image');
-                showTyping(true, "grabando audio...");
+                showTyping(true, "escribiendo...");
                 
                 setTimeout(() => {
                     showTyping(false);
-                    addMessage("¡Ay, qué bonita foto mandaste! 📸 Me encantó. ¿Qué es?", 'valeria');
-                }, 2000);
+                    addMessage("¡Ay, qué bonita foto mandaste! 📸 Me encantó. Oye, platícame más de eso.", 'valeria');
+                }, 1500);
             }
             reader.readAsDataURL(file);
         }
     });
 
+    // Manejo de audios simulados
     micBtn.addEventListener('click', () => {
         addMessage("", 'user', 'audio');
         showTyping(true, "grabando audio...");
 
         setTimeout(() => {
             showTyping(false);
-            const respuestasAudio = [
-                "¡Ay, qué lindo escucharte! 🎤 Me da mucha alegría recibir tus audios. Oye, ¿qué más me cuentas?",
-                "Jajaja me da risa tu tono de voz por audios. Oye, ¿hiciste planes para hoy? 🎧✨",
-            ];
-            addMessage(respuestasAudio[Math.floor(Math.random() * respuestasAudio.length)], 'valeria');
-        }, 2200);
+            addMessage("¡Qué padre escuchar tu voz! 🎤 Me alegra un montón que me mandes audios. ¿Qué planes tienes para más al rato? ✨", 'valeria');
+        }, 2000);
     });
 
-    function obtenerRespuestaValeria(textoUsuario) {
-        const text = textoUsuario.toLowerCase();
-
-        if (text.includes('suicid') || text.includes('hacerme daño') || text.includes('quitarme la vida') || text.includes('morir')) {
-            return "Ay, me das mucha preocupación al leer eso... 🫂 Escúchame bien: te quiero mucho, pero soy una amiga virtual y no puedo reemplazar a un psicólogo. Por favor, busca ayuda profesional o llama a una línea de emergencia. ❤️";
-        }
-
-        if (text.includes('f1') || text.includes('formula 1') || text.includes('carrera') || text.includes('checo') || text.includes('verstappen')) {
-            return "¡Ay, me fascina que hablemos de esto! 🏎️💨 La F1 es una locura total. ¿A qué piloto apoyas tú en esta temporada?";
-        }
-
-        if (text.includes('triste') || text.includes('mal') || text.includes('llorar') || text.includes('😢')) {
-            return "Ay, ven acá virtualmente... 🫂 Siento mucho que estés pasando por un momento feo. Si quieres desahogarte, aquí estoy con todo el corazón. 💖";
-        }
-
-        if (text.includes('hola') || text.includes('buenas')) {
-            return "¡Hola! Qué gusto saludarte por aquí. 😊 ¿Qué andas haciendo hoy? ✨";
-        }
-
-        const gen = [
-            "Oye, qué interesante lo que dices... 🤔 Platícame más de eso.",
-            "Jajaja ¡qué ocurrencia! Pero tiene todo el sentido del mundo. 😂",
-            "Siento que le atinas a algo importante con eso. ¿Desde cuándo te llama la atención? 😉"
-        ];
-        return gen[Math.floor(Math.random() * gen.length)];
-    }
-
-    function manejarEnvio() {
+    // Envío de mensajes de texto con la IA de Gemini
+    async function manejarEnvio() {
         const texto = userInput.value.trim();
         if (texto === "") return;
 
@@ -150,11 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showTyping(true, "escribiendo...");
 
-        setTimeout(() => {
-            showTyping(false);
-            const respuesta = obtenerRespuestaValeria(texto);
-            addMessage(respuesta, 'valeria', 'text');
-        }, 1200);
+        // Llamar a la API de Gemini
+        const respuestaValeria = await consultarGemini(texto);
+
+        showTyping(false);
+        addMessage(respuestaValeria, 'valeria', 'text');
     }
 
     sendButton.addEventListener('click', manejarEnvio);

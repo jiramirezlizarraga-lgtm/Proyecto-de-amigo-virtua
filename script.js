@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const emojiBtns = document.querySelectorAll('.emoji-btn');
 
     // 🔑 TU API KEY DE GOOGLE GEMINI
-    const GEMINI_API_KEY = "AQ.Ab8RN6IFVReu7MaF8hrnYVbjk0gq-Ma7HtbVk3bPzdnABKOrvg"; 
+    const GEMINI_API_KEY = "AQ.Ab8RN6Kbz39p8keV7m9xVNFfYl8aub4EmkYWjA2Aw-sgSGnXvQ"; 
 
     // Historial avanzado para memoria de contexto continuo
     let historialChat = [
